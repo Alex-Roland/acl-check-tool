@@ -48,8 +48,8 @@ parser.add_argument('-V', help = 'display version information', default = False,
 args = parser.parse_args()
 
 NAME = 'ACL Check Tool'
-VERSION = '2.2.0'
-DATE = '08/08/2021'
+VERSION = '2.2.1'
+DATE = '08/09/2021'
 
 if args.V == True: # Script version information
     print('|' + '-'*30 + '|')
@@ -145,9 +145,10 @@ def check_ip(output, ip_list, ip, hostname):
         for addr in ip_list:
             if re.search(rf'\b{ip_list[ipcounter]}\b', item): # Use regex word boundaries to search for an exact IP match anywhere in the configuration
                 for line in acl_list[index::-1]:
-                    if '    ' not in line or '  ' not in line or '        ' not in line:
+                    if ' ' not in line[0]:
                         out_sum(f'{ip}({hostname}) --> {line}')
                         logger(f'{ip}({hostname}) --> {line}')
+                        break
                 out_sum(f'{ip}({hostname}) --> {item}')
                 logger(f'{ip}({hostname}) --> {item}')
             ipcounter += 1

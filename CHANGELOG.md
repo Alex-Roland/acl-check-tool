@@ -5,6 +5,10 @@ Ability to search for specific CIDRs, example: -i 172.17.10.4 -c /24, this will 
     Might do this to where either the entire CIDR range is searched or just the network ID
     *Add ipaddress module for this*
 
+Version 2.2.1 - 2021-08-09
+--------------------------
+Fixed: ACL name parsing has been optimized
+
 
 Version 2.2.0 - 2021-08-08
 --------------------------
