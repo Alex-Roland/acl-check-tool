@@ -6,6 +6,11 @@ Ability to search for specific CIDRs, example: -i 172.17.10.4 -c /24, this will 
     *Add ipaddress module for this*
 
 
+Version 2.2.0 - 2021-08-08
+--------------------------
+Added: Grabs the ACL the matching rule is part of
+
+
 Version 2.1.3 - 2021-08-05
 --------------------------
 Added: Check for logs folder in log builder

@@ -48,14 +48,14 @@ parser.add_argument('-V', help = 'display version information', default = False,
 args = parser.parse_args()
 
 NAME = 'ACL Check Tool'
-VERSION = '2.1.3'
-DATE = '8/5/2021'
+VERSION = '2.2.0'
+DATE = '08/08/2021'
 
 if args.V == True: # Script version information
     print('|' + '-'*30 + '|')
     print('|' + ' '*8 + NAME + ' '*8 + '|')
     print('|' + '-'*30 + '|')
-    print('|' + ' '*4 + VERSION + ' '*5 + '|' + ' '*3 + DATE + ' '*3 + '|')
+    print('|' + ' '*4 + VERSION + ' '*5 + '|' + ' '*3 + DATE + ' '*2 + '|')
     print('|' + '-'*30 + '|')
     exit(0)
 
@@ -134,18 +134,20 @@ def discover_vendor(nickName, nosIdName): # Function to get the network OS so co
             nos = 'cisco_nxos'
         elif 'Cisco' in nosIdName:
             nos = 'cisco_ios'
-    elif letter == 'b':
-        nos = 'ruckus_fastiron'
     else:
         nos = 'null'
     return nos
 
 def check_ip(output, ip_list, ip, hostname):
-    config_list = output.splitlines() # Read each config line into a new list
+    acl_list = output.splitlines() # Read each config line into a new list
     ipcounter = 0
-    for item in config_list:
+    for index, item in enumerate(acl_list):
         for addr in ip_list:
-            if re.search(r'\b{}\b'.format(ip_list[ipcounter]), item): # Use regex word boundaries to search for an exact IP match anywhere in the configuration
+            if re.search(rf'\b{ip_list[ipcounter]}\b', item): # Use regex word boundaries to search for an exact IP match anywhere in the configuration
+                for line in acl_list[index::-1]:
+                    if '    ' not in line or '  ' not in line or '        ' not in line:
+                        out_sum(f'{ip}({hostname}) --> {line}')
+                        logger(f'{ip}({hostname}) --> {line}')
                 out_sum(f'{ip}({hostname}) --> {item}')
                 logger(f'{ip}({hostname}) --> {item}')
             ipcounter += 1
@@ -196,16 +198,13 @@ def send_commands(dq, dd, ip_list, kwargs): # Function to perform tasks on each 
                     else:
                         logger('No policy found')
                 elif nc_params['device_type'] == 'enterasys':
-                    output = nc.send_command('show config')
+                    output = nc.send_command('show access-lists')
                     check_ip(output, ip_list, ip, hostname)
                 elif nc_params['device_type'] == 'cisco_ios':
-                    output = nc.send_command('show run')
+                    output = nc.send_command('show access-lists')
                     check_ip(output, ip_list, ip, hostname)
                 elif nc_params['device_type'] == 'cisco_nxos':
-                    output = nc.send_command('show run')
-                    check_ip(output, ip_list, ip, hostname)
-                elif nc_params['device_type'] == 'ruckus_fastiron':
-                    output = nc.send_command('show run')
+                    output = nc.send_command('show access-lists')
                     check_ip(output, ip_list, ip, hostname)
                 else:
                     raise
