@@ -38,7 +38,7 @@ requests.packages.urllib3.disable_warnings(category = InsecureRequestWarning) # 
 
 parser = argparse.ArgumentParser(description = 'Checks ACLs for an IP match')
 parser.add_argument('-i', help = 'ip to check', action='append')
-parser.add_argument('-s', help = 'XMC hostname / IP (default: xmc.pnw.edu)', default = 'xmc.pnw.edu')
+parser.add_argument('-s', help = 'XMC hostname / IP (default: xmc.localhost)', default = 'xmc.localhost')
 parser.add_argument('-u', help = 'username for SSH authentication (default: admin)', default = 'admin')
 parser.add_argument('-k', help = 'prompt for SSH password (default: false)', default = False, action = 'store_true')
 parser.add_argument('-t', help = 'number of threads to run (default: 20)', type=int, default = 20)
@@ -112,7 +112,7 @@ def log_sum(file): # Function to output to the screen and log the output to a fi
     return write_log # Returns nested function
 
 def grab_routers(nickName):
-    if 'r' in nickName.split('-')[-1] or 'c' in nickName.split('-')[-1]: # Grab r(outer) or c(ore), example: nw-hmd-pwrs-226-x690-c1 will match due to the c in c1
+    if 'r' in nickName.split('-')[-1] or 'c' in nickName.split('-')[-1]: # Grab r(outer) or c(ore), example: il-chi-x690-c1 will match due to the c in c1
         is_router = True
     else:
         is_router = False
@@ -120,7 +120,7 @@ def grab_routers(nickName):
 
 def discover_vendor(nickName, nosIdName): # Function to get the network OS so commands are run correctly
     if '-' in nickName and 'pnw.edu' not in nickName and 'purdue.edu' not in nickName:
-        letter = nickName.split('-')[-2][0] # Grab letter for NOS detection, example: for nw-hmd-unsv-202-x590-r2 this will grab 'x'
+        letter = nickName.split('-')[-2][0] # Grab letter for NOS detection, example: for il-chi-x690-c1 this will grab 'x'
     else:
         logger(nickName + ' does not conform to naming conventions')
         nos = 'null'
