@@ -48,8 +48,8 @@ parser.add_argument('-V', help = 'display version information', default = False,
 args = parser.parse_args()
 
 NAME = 'ACL Check Tool'
-VERSION = '2.2.1'
-DATE = '08/09/2021'
+VERSION = '2.2.2'
+DATE = '08/11/2021'
 
 if args.V == True: # Script version information
     print('|' + '-'*30 + '|')
