@@ -67,6 +67,7 @@ current_date = datetime.now().strftime('%Y-%m-%d')
 
 NUM_THREADS = args.t # Used to set the maximum amount of parallel connections
 PRINT_LOCK = Lock() # This will prevent the output from being sent out of order
+failed = False # Used to let the user know if there is anything in the failure log
 
 api_url = 'https://' + args.s + ':8443/nbi/graphql' # URL of the XMC server, pulled from -s flag in argparse
 
@@ -82,13 +83,13 @@ NET_DEVICE = { # Basic device dictionary, this is copied in the main function an
     'conn_timeout': 10,
 }
 
-def log_folder():
+def log_folder(): # Check if a logs folder exists and make one if it doesn't
     if os.path.isdir('logs'):
         return
     else:
         os.mkdir('logs')
 
-def daily_runtime_folder():
+def daily_runtime_folder(): # Check if a date folder exists and make one if it doesn't
     if os.path.isdir('logs/' + current_date):
         return
     else:
@@ -141,10 +142,10 @@ def discover_vendor(nickName, nosIdName): # Function to get the network OS so co
 def check_ip(output, ip_list, ip, hostname):
     acl_list = output.splitlines() # Read each config line into a new list
     ipcounter = 0
-    for index, item in enumerate(acl_list):
+    for index, item in enumerate(acl_list): # Grabs the index value along with the list value. Used to start the reverse search below
         for addr in ip_list:
             if re.search(rf'\b{ip_list[ipcounter]}\b', item): # Use regex word boundaries to search for an exact IP match anywhere in the configuration
-                for line in acl_list[index::-1]:
+                for line in acl_list[index::-1]: # Reverses search on the ACL output so it can grab the name of the ACL it found a match in
                     if ' ' not in line[0]:
                         out_sum(f'{ip}({hostname}) --> {line}')
                         logger(f'{ip}({hostname}) --> {line}')
@@ -211,6 +212,7 @@ def send_commands(dq, dd, ip_list, kwargs): # Function to perform tasks on each 
                     raise
             except BaseException as e:
                 log_failed(f'{thread_name} {ip}: {e}')
+                failed = True
                 nc.disconnect() # Gracefully closes the SSH connection
                 dq.task_done() # Indicate that a formerly enqueued task is complete
                 return
@@ -219,6 +221,7 @@ def send_commands(dq, dd, ip_list, kwargs): # Function to perform tasks on each 
             dq.task_done() # Indicate that a formerly enqueued task is complete
         except BaseException as e:
             log_failed(f'{thread_name} {ip}:\n {e}')
+            failed = True
             dq.task_done() # Indicate that a formerly enqueued task is complete
 
 if args.w == 'report.log': # Creates a unique report name
@@ -275,10 +278,13 @@ def main():
             device_queue.put(new_device) # Loads device network connetion information into the queue
             device_details.put(device)
             x += 1
+    except requests.exceptions.HTTPError as r:
+        print(f'Unable to connect to {args.s}, check connection or username/password')
+        exit(255)
     except BaseException as e:
         log_failed(f'Failed to fetch {device} data from XMC:')
         log_failed(e)
-        exit(255)
+        failed = True
         
     total_devices = device_queue.qsize() # Used in the max thread calculation
     logger(f'\nSearching {total_devices} routers')
@@ -289,6 +295,9 @@ def main():
 
     logger(f'\nElapsed time: {str(datetime.now() - start_time)}') # Total runtime for the script
     out_sum(f'\nElapsed time: {str(datetime.now() - start_time)}') # Total runtime for the script
+
+    if failed == True:
+        print('There were some issues, check the failed log output for details')
 
 if __name__ == "__main__": # Check if script is called by the user or imported
     main()
